@@ -1,0 +1,58 @@
+﻿@page "/produto/{Id:long}"
+@inject ProdutoService ProdutosServices
+@inject NavigationManager Navigation
+@inject CarrinhoService CarrinhosServices
+
+<div class="container my-4">
+    @if (produto == null)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">A carregar detalhes do produto...</p>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm p-4">
+            <h2>@produto.Nome</h2>
+            <p class="text-muted">Marca: @produto.Marca</p>
+            <h3 class="text-success">R$ @produto.Preco.ToString("N2")</h3>
+
+            <a href="/" class="btn btn-secondary mt-3">Voltar à Página Inicial</a>
+        </div>
+    }
+</div>
+
+<button class="btn btn-primary" @onclick="AdicionarAoCarrinho">
+    🛒 Adicionar ao Carrinho
+</button>
+
+@code {
+    [Parameter]
+    public long Id { get; set; }
+
+    private Guitarras produto;
+    private string _mensagemErro = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Chamamos o serviço passando o Id que veio da URL
+            produto = await ProdutosServices.GetProdutoByIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            _mensagemErro = $"Erro ao carregar os detalhes: {ex.Message}";
+        }
+    }
+
+    private void AdicionarAoCarrinho()
+    {
+        if (produto != null)
+        {
+            CarrinhosServices.Adicionar(produto);
+            Navigation.NavigateTo("/carrinho");
+        }
+    }
+}

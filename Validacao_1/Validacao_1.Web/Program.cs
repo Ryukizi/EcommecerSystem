@@ -19,6 +19,7 @@ builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
 string urlSupabase = builder.Configuration["Supabase:Url"] ?? string.Empty;
 string chaveSupabase = builder.Configuration["Supabase:Chave"] ?? string.Empty;
 
+
 var opcoes = new SupabaseOptions { AutoConnectRealtime = true };
 builder.Services.AddSingleton(provider => new Client(urlSupabase, chaveSupabase, opcoes));
 
@@ -30,6 +31,10 @@ builder.Services.AddScoped<IValidador, Validador>();
 builder.Services.AddScoped<Validacao_1.Shared.Services.CriptografiaServico>();
 
 builder.Services.AddScoped<Validacao_1.Shared.Services.EmailServico>();
+
+builder.Services.AddScoped<Validacao_1.Shared.Services.ProdutoService>();
+
+builder.Services.AddScoped<Validacao_1.Shared.Services.CarrinhoService>();
 
 var app = builder.Build();
 
