@@ -31,7 +31,7 @@
     [Parameter]
     public long Id { get; set; }
 
-    private Guitarras produto;
+    private Guitarras? produto;
     private string _mensagemErro = "";
 
     protected override async Task OnInitializedAsync()
@@ -47,11 +47,13 @@
         }
     }
 
-    private void AdicionarAoCarrinho()
+    private async Task AdicionarAoCarrinho()
     {
         if (produto != null)
         {
-            CarrinhosServices.Adicionar(produto);
+            // Adicionado 'await' e o 'Async' no final do método
+            await CarrinhosServices.Adicionar(produto);
+
             Navigation.NavigateTo("/carrinho");
         }
     }

@@ -1,0 +1,88 @@
+﻿@page "/carrinho"
+@inject CarrinhoService CarrinhosServices
+@inject NavigationManager Navigation
+
+<div class="container my-4">
+    <h2>🛒 Seu Carrinho de Compras</h2>
+
+    @if (itensCarrinho == null)
+    {
+        <div class="text-center mt-4">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Carregando seu carrinho seguro...</p>
+        </div>
+    }
+    else if (itensCarrinho.Count == 0)
+    {
+        <div class="alert alert-info mt-4">
+            O seu carrinho está vazio. Que tal voltar e escolher uma guitarra? 🎸
+        </div>
+        <a href="/" class="btn btn-primary">Voltar à Loja</a>
+    }
+    else
+    {
+        <table class="table table-striped mt-4 align-middle">
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Marca</th>
+                    <th class="text-end">Preço</th>
+                    <th class="text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in itensCarrinho)
+                {
+                    <tr>
+                        <td>@item.Nome</td>
+                        <td>@item.Marca</td>
+                        <td class="text-end">R$ @item.Preco.ToString("N2")</td>
+                        <td class="text-center">
+                            <button class="btn btn-danger btn-sm" @onclick="() => RemoverDoCarrinho(item.Id)">
+                                ❌ Remover
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <h4>Total: <span class="text-success">R$ @totalCarrinho.ToString("N2")</span></h4>
+            <div>
+                <a href="/" class="btn btn-secondary me-2">Continuar a Comprar</a>
+                <button class="btn btn-success" @onclick="FinalizarCompra">Finalizar Compra 🚀</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+
+    private List<Guitarras>? itensCarrinho = null;
+    private decimal totalCarrinho = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarrinhosServices.CarregarCarrinhoAsync();
+
+        itensCarrinho = CarrinhosServices.Itens.ToList();
+        totalCarrinho = CarrinhosServices.Total;
+
+        StateHasChanged();
+    }
+
+    private async Task RemoverDoCarrinho(long Id)
+    {
+        await CarrinhosServices.Remover(Id);
+
+        itensCarrinho = CarrinhosServices.Itens.ToList();
+        totalCarrinho = CarrinhosServices.Total;
+    }
+
+    private async Task FinalizarCompra()
+    {
+        await CarrinhosServices.LimparCarrinho();
+        Navigation.NavigateTo("/finalizar-compra");
+    }
+}

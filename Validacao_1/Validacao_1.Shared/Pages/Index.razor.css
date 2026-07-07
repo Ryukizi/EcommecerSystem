@@ -1,0 +1,10 @@
+﻿/* Muda a cor das setas para preto */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    filter: invert(1);
+}
+
+/* Muda a cor das barrinhas de baixo para preto */
+.carousel-indicators {
+    filter: invert(1);
+}
