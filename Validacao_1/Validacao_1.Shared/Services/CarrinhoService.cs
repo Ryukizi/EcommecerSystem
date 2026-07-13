@@ -32,7 +32,7 @@ public class CarrinhoService
     };
 
     // 💡 CORREÇÃO 1: Adicionamos Nome e Marca no DTO para salvar no navegador
-    private sealed record GuitarraDto(long Id, string Nome, string Marca, decimal Preco);
+    private sealed record GuitarraDto(long Id, string Nome, string Marca, decimal Preco, string? url_imagem);
 
     public async Task CarregarCarrinhoAsync()
     {
@@ -51,7 +51,8 @@ public class CarrinhoService
                             Id = d.Id,
                             Preco = d.Preco,
                             Nome = d.Nome,   // 💡 CORREÇÃO 2: Devolve o Nome para a tela
-                            Marca = d.Marca  // 💡 CORREÇÃO 3: Devolve a Marca para a tela
+                            Marca = d.Marca, // 💡 CORREÇÃO 3: Devolve a Marca para a tela
+                            Url_imagem = d.url_imagem
                         }).ToList();
                     }
                 }
@@ -78,7 +79,7 @@ public class CarrinhoService
         try
         {
             // 💡 CORREÇÃO 4: Passamos os dados reais de Nome e Marca do produto na hora de salvar
-            var dto = _itens.Select(g => new GuitarraDto(g.Id, g.Nome, g.Marca, g.Preco)).ToList();
+            var dto = _itens.Select(g => new GuitarraDto(g.Id, g.Nome, g.Marca, g.Preco, g.Url_imagem)).ToList();
             var json = JsonSerializer.Serialize(dto, _jsonOptions);
             await _js.InvokeVoidAsync("localStorage.setItem", CarrinhoStorageKey, json);
         }

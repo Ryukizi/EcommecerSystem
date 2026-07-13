@@ -46,9 +46,9 @@
                 </li>
 
                 <li>
-                    <form class="d-flex" role="search">
-                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" />
-                        <button class="btn btn-outline-success" type="submit">Search</button>
+                    <form class="d-flex" role="search" @onsubmit="DispararBusca">
+                        <input class="form-control me-2" type="search" placeholder="Buscar guitarra..." aria-label="Search" @bind="termoPesquisa" />
+                        <button class="btn btn-outline-warning" type="submit">Search</button>
                     </form>
                 </li>
             </ul>
@@ -57,7 +57,7 @@
 </nav>
 
 @code{
-
+    private string termoPesquisa = "";
     private string _respostaBasica = "";
     private async Task ExecutarLogout()
     {
@@ -70,6 +70,14 @@
         catch (Exception ex)
         {
             _respostaBasica = $"Erro ao deslogar: {ex.Message}";
+        }
+    }
+
+    private void DispararBusca()
+    {
+        if (!string.IsNullOrWhiteSpace(termoPesquisa))
+        {
+            Navigation.NavigateTo($"/resultados?busca={Uri.EscapeDataString(termoPesquisa)}");
         }
     }
 }

@@ -23,69 +23,79 @@
             </Authorized>
 
             <NotAuthorized>
-                <h2 class="text-center mb-4">Criar Nova Conta</h2>
-
-                @if (!string.IsNullOrEmpty(_respostaBasica))
-                {
-                    <div class="alert alert-primary text-center mt-3" role="alert">
-                        <strong>Validação:</strong>
-                        <div>@_respostaBasica</div>
-                        @if (!string.IsNullOrEmpty(_nomeResposta))
-                        {
-                            <div>@_nomeResposta</div>
-                        }
-                        @if (!string.IsNullOrEmpty(_emailResposta))
-                        {
-                            <div>@_emailResposta</div>
-                        }
-                        @if (!string.IsNullOrEmpty(_senhaResposta))
-                        {
-                            <div>@_senhaResposta</div>
-                        }
-                    </div>
-                }
-
                 @if (_mostrarCampoCodigo)
                 {
                     <div class="alert alert-success mt-3 text-center bg-opacity-70" role="alert">
                         <label class="form-label fw-bold text-success mb-2">Digite o código de verificação enviado para seu email:</label>
-                        <input type="text" class="form-control glass-input text-center fw-bold fs-5 mb-2" @bind="_codigoEnviado" placeholder="Código de verificação" />
+
+                        <div class="d-flex justify-content-center gap-2 my-3">
+                            <input @ref="inputRef0" type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" class="form-control text-center fw-bold fs-4 glass-input" style="width: 55px; height: 55px;" @bind="_digitosCodigo[0]" @bind:event="oninput" @onkeyup="() => MudarFoco(0)" />
+                            <input @ref="inputRef1" type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" class="form-control text-center fw-bold fs-4 glass-input" style="width: 55px; height: 55px;" @bind="_digitosCodigo[1]" @bind:event="oninput" @onkeyup="() => MudarFoco(1)" />
+                            <input @ref="inputRef2" type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" class="form-control text-center fw-bold fs-4 glass-input" style="width: 55px; height: 55px;" @bind="_digitosCodigo[2]" @bind:event="oninput" @onkeyup="() => MudarFoco(2)" />
+                            <input @ref="inputRef3" type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" class="form-control text-center fw-bold fs-4 glass-input" style="width: 55px; height: 55px;" @bind="_digitosCodigo[3]" @bind:event="oninput" @onkeyup="() => MudarFoco(3)" />
+                        </div>
+
                         <button class="btn btn-glass w-100" @onclick="VerificarCodigo">Verificar Código</button>
                     </div>
                 }
 
-                <div class="form-group mt-3">
-                    <label class="form-label fw-bold">Idade</label>
-                    <input type="number" pattern="[0-9]*" class="form-control glass-input" @bind="_idade"
-                           onkeypress="return event.key !== '.' && event.key !== ',';" placeholder="Digite sua idade" />
-                </div>
+                @if (!_mostrarCampoCodigo)
+                {  
+                    <h2 class="text-center mb-4">Criar Nova Conta</h2>
 
-                <div class="form-group mt-3">
-                    <label class="form-label fw-bold">Nome Completo</label>
-                    <input type="text" pattern="[A-Za-zÀ-ÿ\s]+" inputmode="text" class="form-control glass-input" @bind="_nome"
-                           oninput="this.value = this.value.replace(/[0-9]/g, '')" placeholder="Digite apenas letras"
-                           onkeypress="return event.key !== '.' && event.key !== ',';" />
-                </div>
+                    @if (!string.IsNullOrEmpty(_respostaBasica))
+                    {
+                        <div class="alert alert-primary text-center mt-3" role="alert">
+                            <strong>Validação:</strong>
+                            <div>@_respostaBasica</div>
+                            @if (!string.IsNullOrEmpty(_nomeResposta))
+                            {
+                                <div>@_nomeResposta</div>
+                            }
+                            @if (!string.IsNullOrEmpty(_emailResposta))
+                            {
+                                <div>@_emailResposta</div>
+                            }
+                            @if (!string.IsNullOrEmpty(_senhaResposta))
+                            {
+                                <div>@_senhaResposta</div>
+                            }
+                        </div>
+                    }
 
-                <div class="form-group mt-3">
-                    <label class="form-label fw-bold">E-mail</label>
-                    <input type="text" class="form-control glass-input" @bind="_email" placeholder="Digite seu Email" />
-                </div>
+                    <div class="form-group mt-3">
+                        <label class="form-label fw-bold">Idade</label>
+                        <input type="number" pattern="[0-9]*" class="form-control glass-input" @bind="_idade"
+                               onkeypress="return event.key !== '.' && event.key !== ',';" placeholder="Digite sua idade" />
+                    </div>
 
-                <div class="form-group mt-3">s
-                    <label class="form-label fw-bold">Senha</label>
-                    <input type="password" class="form-control glass-input" @bind="_senha" placeholder="Digite sua Senha" />
-                </div>
+                    <div class="form-group mt-3">
+                        <label class="form-label fw-bold">Nome Completo</label>
+                        <input type="text" pattern="[A-Za-zÀ-ÿ\s]+" inputmode="text" class="form-control glass-input" @bind="_nome"
+                               oninput="this.value = this.value.replace(/[0-9]/g, '')" placeholder="Digite apenas letras"
+                               onkeypress="return event.key !== '.' && event.key !== ',';" />
+                    </div>
 
-                <button class="btn btn-glass mt-4 w-100" @onclick="async () => await OnClickPessoa(_idade, _nome, _email, _senha)">
-                    Cadastrar
-                </button>
+                    <div class="form-group mt-3">
+                        <label class="form-label fw-bold">E-mail</label>
+                        <input type="text" class="form-control glass-input" @bind="_email" placeholder="Digite seu Email" />
+                    </div>
 
-                <div class="d-flex justify-content-center mt-3" style="position: relative; z-index: 3;">
-                    <button type="button" class="btn btn-glass-secondary w-50 fw-bold" @onclick="Login">
-                        Voltar para o Login
+                    <div class="form-group mt-3">
+                        <label class="form-label fw-bold">Senha</label>
+                        <input type="password" class="form-control glass-input" @bind="_senha" placeholder="Digite sua Senha" />
+                    </div>
+
+                    <button class="btn btn-glass mt-4 w-100" @onclick="async () => await OnClickPessoa(_idade, _nome, _email, _senha)">
+                        Cadastrar
                     </button>
-                </div>
+
+                    <div class="d-flex justify-content-center mt-3" style="position: relative; z-index: 3;">
+                        <button type="button" class="btn btn-glass-secondary w-50 fw-bold" @onclick="Login">
+                            Voltar para o Login
+                        </button>
+                    </div>
+                }
             </NotAuthorized>
         </AuthorizeView>
 
@@ -104,6 +114,11 @@
     private bool _mostrarCampoCodigo = false;
     private string _codigoEnviado = "";
     private int _codigoCorreto;
+    private string[] _digitosCodigo = new string[4] { "", "", "", "" };
+    private ElementReference inputRef0;
+    private ElementReference inputRef1;
+    private ElementReference inputRef2;
+    private ElementReference inputRef3;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -136,15 +151,23 @@
             if (resultado == null || resultado.Count == 0 || IsFormularioValido())
             {
                 _respostaBasica = "Dados validados com sucesso! Enviando código...";
-                _mostrarCampoCodigo = true;
                 _codigoCorreto = new Random().Next(1000, 10000);
+                _digitosCodigo = new string[4] { "", "", "", "" };
 
-                _ = Task.Run(async () => await EmailServico.EnviarEmailCodigo(
+                Console.WriteLine($"Senha: '{Config["Smtp:Senha"]}'");
+                StateHasChanged();
+
+
+
+                await EmailServico.EnviarEmailCodigo(
                     _email,
                     _codigoCorreto,
-                    Config["Smtp:Remetente"] ?? "niellealbrandao@gmail.com",
-                    Config["Smtp:Usuario"] ?? "aed811001@smtp-brevo.com",
-                    Config["Smtp:Senha"] ?? ""));
+                    Config["Smtp:Remetente"] ?? "",
+                    Config["Smtp:Usuario"] ?? "",
+                    Config["Smtp:Senha"] ?? "");
+
+                // 🔓 Só mostra os campos após o e-mail ser aceito pelo servidor SMTP
+                _mostrarCampoCodigo = true;
             }
             else
             {
@@ -154,8 +177,8 @@
         }
         catch (Exception ex)
         {
-            _respostaBasica = $"Erro na validação: {ex.Message}";
-            Console.WriteLine($"[ERRO]: {ex.ToString()}");
+            _respostaBasica = $"Erro ao enviar o e-mail de confirmação: {ex.Message}";
+            _mostrarCampoCodigo = false;
         }
         finally
         {
@@ -165,6 +188,8 @@
 
     private async Task VerificarCodigo()
     {
+        _codigoEnviado = string.Join("", _digitosCodigo);
+
         if (_codigoEnviado == _codigoCorreto.ToString())
         {
             try
@@ -213,6 +238,10 @@
         {
             _respostaBasica = "Código de verificação incorreto. Tente novamente.";
             _mostrarCampoCodigo = true;
+
+            _digitosCodigo = new string[4] { "", "", "", "" };
+            StateHasChanged();
+            await inputRef0.FocusAsync();
         }
     }
 
@@ -244,4 +273,27 @@
         Navigation.NavigateTo("/login", forceLoad: true);
         await Task.CompletedTask;
     }
+
+    private async Task MudarFoco(int index)
+    {
+        if (!string.IsNullOrEmpty(_digitosCodigo[index]))
+        {
+            switch (index)
+            {
+                case 0:
+                    await inputRef1.FocusAsync();
+                    break;
+                case 1:
+                    await inputRef2.FocusAsync();
+                    break;
+                case 2:
+                    await inputRef3.FocusAsync();
+                    break;
+                case 3:
+                    await VerificarCodigo();
+                    break;
+            }
+        }
+    }
 }
+

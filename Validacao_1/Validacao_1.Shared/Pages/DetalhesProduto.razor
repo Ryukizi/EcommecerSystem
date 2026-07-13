@@ -3,29 +3,83 @@
 @inject NavigationManager Navigation
 @inject CarrinhoService CarrinhosServices
 
-<div class="container my-4">
-    @if (produto == null)
-    {
-        <div class="text-center">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2">A carregar detalhes do produto...</p>
-        </div>
-    }
-    else
-    {
-        <div class="card shadow-sm p-4">
-            <h2>@produto.Nome</h2>
-            <p class="text-muted">Marca: @produto.Marca</p>
-            <h3 class="text-success">R$ @produto.Preco.ToString("N2")</h3>
+<div class="container-fluid bg-dark text-light min-vh-100 py-5">
+    <div class="container">
+        @if (produto == null)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-warning" role="status"></div>
+                <p class="mt-2 text-muted">Carregando detalhes do produto...</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-5 align-items-start">
 
-            <a href="/" class="btn btn-secondary mt-3">Voltar à Página Inicial</a>
-        </div>
-    }
+                <div class="col-md-6">
+                    <div class="row g-2 align-items-start">
+
+                        <div class="col-2 d-flex flex-column gap-2 align-items-center">
+                            @if (!string.IsNullOrEmpty(produto.Url_imagem))
+                            {
+                                <button class="btn p-0 border border-warning rounded overflow-hidden" style="height: 60px; width: 60px;">
+                                    <img src="@produto.Url_imagem" class="img-fluid" style="object-fit: cover; height: 100%; width: 100%;" />
+                                </button>
+                            }
+
+                            <button class="btn p-0 border border-secondary rounded text-muted d-flex align-items-center justify-content-center" style="height: 60px; width: 60px; font-size: 20px;">
+                            </button>
+                        </div>
+
+                        <div class="col-10 text-center">
+                            <div class="rounded p-3 d-inline-block">
+                                @if (!string.IsNullOrEmpty(produto.Url_imagem))
+                                {
+                                    <img src="@produto.Url_imagem" class="img-fluid rounded" alt="@produto.Nome" style="max-height: 450px; object-fit: contain;" />
+                                }
+                                else
+                                {
+                                    <div class="d-flex align-items-center justify-content-center" style="height: 400px;">
+                                        <span class="text-light">Sem foto disponível</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <span class="text-muted small uppercase">Categoria: Guitarras</span>
+                    <h1 class="fw-bold text-light mt-1 mb-3">@produto.Nome</h1>
+
+                    <div class="mb-4">
+                        <p class="text-muted mb-1">Marca: <span class="text-light fw-semibold">@produto.Marca</span></p>
+                    </div>
+
+                    <div class="my-4">
+                        <h2 class="text-success fw-bold mb-0">R$ @produto.Preco.ToString("N2") <span class="fs-6 text-muted fw-normal">no PIX</span></h2>
+                        <p class="text-muted small mt-1">ou R$ @((produto.Preco * 1.11m).ToString("N2")) em 10x sem juros</p>
+                    </div>
+
+                    <div class="d-grid gap-2 col-lg-8 mt-4">
+                        <button class="btn btn-success btn-lg rounded-3 fw-bold py-3" @onclick="AdicionarAoCarrinho">
+                            🛒 Comprar
+                        </button>
+                    </div>
+
+                    <div class="mb-4 mt-4">
+                        <form class="d-flex" role="search">
+                            <input class="form-control form-control-sm me-2 rounded-2 text-light border-secondary" type="search" placeholder="Calcular CEP" aria-label="Search" style="max-width: 150px;" />
+                            <button class="btn btn-outline-warning btn-sm" type="submit">Buscar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 </div>
 
-<button class="btn btn-primary" @onclick="AdicionarAoCarrinho">
-    🛒 Adicionar ao Carrinho
-</button>
 
 @code {
     [Parameter]

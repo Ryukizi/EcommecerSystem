@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Supabase;
 using System.Text.Json;
+using Supabase.Postgrest; 
+using Supabase.Postgrest.Interfaces;
 
 namespace Validacao_1.Shared.Services
 {
@@ -49,6 +51,37 @@ namespace Validacao_1.Shared.Services
             catch (Exception ex)
             {
                 throw new Exception($"Ocorreu um erro ao buscar produtos: {ex.Message}", ex);
+            }
+        }
+    
+
+        public async Task<List<Guitarras>> BuscarGuitarrasAsync(string termoBusca)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(termoBusca))
+                {
+                    return await GetProdutosAsync(); // Retorna todos os produtos se o termo de busca estiver vazio
+                }
+
+                var filtros = new List<IPostgrestQueryFilter>
+                {
+                    new QueryFilter("nome", Constants.Operator.ILike, $"%{termoBusca}%"),
+                    new QueryFilter("marca", Constants.Operator.ILike, $"%{termoBusca}%")
+                };
+
+
+                // Juntamos os dois usando o .Or() do Supabase
+                var response = await _supabaseClient
+                    .From<Guitarras>()
+                    .Or(filtros)
+                    .Get();
+
+                return response.Models;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar guitarras: {ex.Message}", ex);
             }
         }
     }

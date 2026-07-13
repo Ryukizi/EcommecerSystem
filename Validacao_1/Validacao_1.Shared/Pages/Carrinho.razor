@@ -1,6 +1,7 @@
 ﻿@page "/carrinho"
 @inject CarrinhoService CarrinhosServices
 @inject NavigationManager Navigation
+@inject SupabaseAuthStateProvider AuthStateProvider
 
 <div class="container my-4">
     <h2>🛒 Seu Carrinho de Compras</h2>
@@ -21,37 +22,64 @@
     }
     else
     {
-        <table class="table table-striped mt-4 align-middle">
-            <thead>
-                <tr>
-                    <th>Produto</th>
-                    <th>Marca</th>
-                    <th class="text-end">Preço</th>
-                    <th class="text-center">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
+        <div class="row g-5 mt-2">
+            <div class="col-lg-8">
                 @foreach (var item in itensCarrinho)
                 {
-                    <tr>
-                        <td>@item.Nome</td>
-                        <td>@item.Marca</td>
-                        <td class="text-end">R$ @item.Preco.ToString("N2")</td>
-                        <td class="text-center">
-                            <button class="btn btn-danger btn-sm" @onclick="() => RemoverDoCarrinho(item.Id)">
-                                ❌ Remover
-                            </button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                    <div class="card mb-3 shadow-sm border-0 bg-dark text-light rounded-3">
+                        <div class="row g-0 align-items-center p-3">
+                            <div class="col-md-2 text-center">
+                                @if (!string.IsNullOrEmpty(item.Url_imagem))
+                                {
+                                    <a href="/produto/@item.Id" class="text-decoration-none text-dark">
+                                    <img src="@item.Url_imagem" class="img-fluid rounded" alt="@item.Nome" style="max-height: 80px; object-fit: contain;" />
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="height: 80px; width: 80px; margin: auto;">
+                                        <span class="text-light small">Sem foto</span>
+                                    </div>
+                                }
+                            </div>
 
-        <div class="d-flex justify-content-between align-items-center mt-4">
-            <h4>Total: <span class="text-success">R$ @totalCarrinho.ToString("N2")</span></h4>
-            <div>
-                <a href="/" class="btn btn-secondary me-2">Continuar a Comprar</a>
-                <button class="btn btn-success" @onclick="FinalizarCompra">Finalizar Compra 🚀</button>
+                            <div class="col-md-6 px-3">
+                                <h5 class="card-title fw-bold text-warning mb-1">@item.Nome</h5>
+                                <p class="card-text text-muted small mb-0">Marca: @item.Marca</p>
+                            </div>
+
+                            <div class="col-md-2 text-end">
+                                <span class="fw-bold fs-5 text-success">R$ @item.Preco.ToString("N2")</span>
+                            </div>
+
+                            <div class="col-md-2 text-center">
+                                <button class="btn btn-outline-danger btn-sm rounded-pill px-3" @onclick="() => RemoverDoCarrinho(item.Id)">
+                                    ✕ Remover
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 bg-dark text-light p-4 rounded-3">
+                    <h4 class="fw-bold text-warning border-bottom pb-3 mb-3">Resumo do Pedido</h4>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="fs-5">Total:</span>
+                        <span class="fw-bold fs-4 text-success">R$ @totalCarrinho.ToString("N2")</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success rounded-pill py-2 fw-bold" @onclick="FinalizarCompra">
+                            Finalizar Compra 🚀
+                        </button>
+                        <a href="/" class="btn btn-outline-light rounded-pill py-2">
+                            Continuar a Comprar
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     }
@@ -82,7 +110,20 @@
 
     private async Task FinalizarCompra()
     {
-        await CarrinhosServices.LimparCarrinho();
-        Navigation.NavigateTo("/finalizar-compra");
+        // O Blazor vai chamar o método 'GetAuthenticationStateAsync' do seu SupabaseAuthStateProvider
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // Verifica se a identidade existe e se está validada (Logado)
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            // Usuário logado: Avança para a tela de finalização do pedido
+            Navigation.NavigateTo("/finalizar-compra");
+        }
+        else
+        {
+            // Usuário deslogado: Redireciona para fazer o cadastro/login primeiro
+            Navigation.NavigateTo("/cadastro");
+        }
     }
 }

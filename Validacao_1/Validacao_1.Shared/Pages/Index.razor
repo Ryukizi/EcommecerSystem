@@ -1,6 +1,8 @@
 ﻿@page "/"
 @inject ProdutoService ProdutosServices
 
+<PageTitle>Home</PageTitle>
+
 <div id="carouselExampleIndicators" class="carousel slide py-xxl-5 bg-white">
     <div class="carousel-indicators">
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
@@ -29,7 +31,7 @@
 </div>
 
 <div class="container-fluid my-4 py-3">
-    <h2 class="mb-4 text-center text-warning">Nosso Catálogo de Guitarras 🎸</h2>
+    <h2 class="mb-4 text-center text-warning py-3">Nosso Catálogo de Guitarras 🎸</h2>
 
     @if (!string.IsNullOrEmpty(_respostaBasica))
     {
@@ -50,7 +52,7 @@
         <div class="row row-cols-lg-5">
             @foreach (var item in produtos)
             {
-                <div class="col-md-4 mb-4 px-5">
+                <div class="col-md-4 mb-4 px-md-3">
                     <div class="card h-100 shadow-sm">
                         @if (!string.IsNullOrEmpty(item.Url_imagem))
                         {

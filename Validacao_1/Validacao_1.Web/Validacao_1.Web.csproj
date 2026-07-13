@@ -18,4 +18,10 @@
     <ProjectReference Include="..\Validacao_1.Shared\Validacao_1.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
