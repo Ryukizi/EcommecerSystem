@@ -1,74 +1,123 @@
 ﻿@page "/"
-@inject NavigationManager Navigation
-@inject AuthenticationStateProvider AuthStateProvider
-@inject IValidador Validador
-@inject Client SupabaseClient
+@inject ProdutoService ProdutosServices
 
-<div class="container mt-5" style="max-width: 600px;">
-    <div class="card bg-white bg-opacity-10 text-white border-0 shadow-lg p-4 mb-4 rounded-2" style="backdrop-filter: blur(5px);">
+<PageTitle>Home</PageTitle>
 
-        <AuthorizeView>
-            <Authorized>
-                <div class="alert alert-success border-0 shadow-sm text-center mb-4" role="alert">
-                    <h4 class="alert-heading fw-bold">Olá! Você está logado no sistema. 🎉</h4>
-                    <p class="mb-0 text-secondary">Bem-vindo de volta ao painel principal!</p>
-                </div>
-
-                <h4 class="text-center fw-bold mb-3 text-white">Área de Teste de Perfis:</h4>
-
-                <AuthorizeView Roles="Admin" Context="adminContext">
-                    <div class="card border-0 bg-danger bg-opacity-75 text-white mb-3 shadow-sm rounded-3">
-                        <div class="card-header bg-danger bg-opacity-20 fw-bold border-0">👑 Visão do Administrador</div>
-                        <div class="card-body">
-                            <p class="card-text mb-0">Se você está vendo esta caixa, seu perfil é <strong>Admin</strong> e o Blazor leu com sucesso!</p>
-                        </div>
-                    </div>
-                </AuthorizeView>
-
-                <AuthorizeView Roles="Usuario" Context="userContext">
-                    <div class="card border-0 bg-primary bg-opacity-75 text-white mb-3 shadow-sm rounded-3">
-                        <div class="card-header bg-primary bg-opacity-50 fw-bold border-0">👤 Visão do Usuário Comum</div>
-                        <div class="card-body">
-                            <p class="card-text mb-0">Se você está vendo esta caixa, seu perfil é <strong>Usuario</strong> comum!</p>
-                        </div>
-                    </div>
-                </AuthorizeView>
-
-                <button class="btn btn-danger w-100 fw-bold py-2 shadow-sm mt-3 rounded-3" @onclick="ExecutarLogout">
-                    Sair do Sistema
-                </button>
-            </Authorized>
-
-            <NotAuthorized>
-                <div class="alert alert-warning border-0 shadow-sm text-center mb-3" role="alert">
-                    <h4 class="alert-heading fw-bold">Você não está logado. 🛑</h4>
-                    <p class="mb-0 text-secondary">Por favor, autentique-se para acessar as funções.</p>
-                </div>
-
-                <div class="d-flex justify-content-center gap-3 mt-3">
-                    <a href="/login" class="btn btn-outline-light fw-bold px-4 shadow-sm rounded-3">Ir para o Login</a>
-                    <a href="/cadastro" class="btn btn-outline-light fw-bold px-4 shadow-sm rounded-3">Criar uma Conta</a>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
-
+<div id="carouselExampleIndicators" class="carousel slide py-xxl-5 bg-white">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
     </div>
+    <div class="carousel-inner">
+        <div class="carousel-item active ">
+            <img src="https://tse2.mm.bing.net/th/id/OIP.gfc_PrWMbnG98uzcS9asZAHaGE?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" class="w-100" style="height: 400px; object-fit: contain;"alt="...">
+        </div>
+        <div class="carousel-item">
+            <img src="https://m.media-amazon.com/images/I/81V5uD59-1L._AC_SY300_SX300_QL70_ML2_.jpg" class="w-100" style="height: 400px; object-fit: contain;" alt="...">
+        </div>
+        <div class="carousel-item">
+            <img src="https://tse1.mm.bing.net/th/id/OIP.0uYo4fS7lXx_sPjRxeX54wHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" class="w-100" style="height: 400px; object-fit: contain;" alt="...">
+        </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
+
+<div class="container-fluid my-4 py-3">
+    <h2 class="mb-4 text-center text-warning py-3">Nosso Catálogo de Guitarras 🎸</h2>
+
+    @if (!string.IsNullOrEmpty(_respostaBasica))
+    {
+        <div class="alert alert-danger" role="alert">
+            @_respostaBasica
+        </div>
+    }
+
+    @if (produtos == null)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-warning" role="status"></div>
+            <p class="mt-2 text-muted">Carregando o catálogo de guitarras...</p>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-lg-5">
+            @foreach (var item in produtos)
+            {
+                <div class="col-md-4 mb-4 px-md-3">
+                    <div class="card h-100 shadow-sm">
+                        @if (!string.IsNullOrEmpty(item.Url_imagem))
+                        {
+                            <a href="/produto/@item.Id" class="text-decoration-none text-dark">
+                            <img src="@item.Url_imagem" class="card-img-top p-3" alt="@item.Nome" style="max-height: 250px; object-fit: contain;" />
+                            </a>
+                        }
+                        else
+                        {
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                                <span class="text-muted">Sem imagem</span>
+                            </div>
+                        }
+
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <a href="/produto/@item.Id" class="text-decoration-none text-dark">
+                                    <h5 class="card-title fw-bold">@item.Nome</h5>
+                                </a>
+                                <p class="card-text mb-2 text-muted"><strong>Marca:</strong> @item.Marca</p>
+
+                                @if (item.Quantidade > 0)
+                                {
+                                    <p class="card-text mb-3 text-secondary">
+                                        <span class="badge bg-success">Em estoque</span> @item.Quantidade unidade.
+                                    </p>
+                                }
+                                else
+                                {
+                                    <p class="card-text mb-3 text-danger fw-bold">
+                                        <span class="badge bg-danger">Esgotado</span>
+                                    </p>
+                                }
+                            </div>
+
+                            <a href="/produto/@item.Id" class="text-decoration-none text-dark">
+                                <h4 class="card-text text-success fw-bold mt-2">
+                                    R$ @item.Preco.ToString("N2", new System.Globalization.CultureInfo("pt-BR"))
+                                </h4>
+                            </a>
+                            <p class="card-text text-muted small">
+                                ou 12x de R$ @((item.Preco / 12).ToString("N2", new System.Globalization.CultureInfo("pt-BR"))) sem juros
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
 </div>
 
 @code {
     private string _respostaBasica = "";
 
-    private async Task ExecutarLogout()
+    protected override async Task OnInitializedAsync()
     {
         try
         {
-            await ((SupabaseAuthStateProvider)AuthStateProvider).FazerLogout();
-
-            Navigation.NavigateTo("/login", forceLoad: true);
+            produtos = await ProdutosServices.GetProdutosAsync();
         }
         catch (Exception ex)
         {
-            _respostaBasica = $"Erro ao deslogar: {ex.Message}";
+            _respostaBasica = $"Erro ao obter produtos: {ex.Message}";
         }
     }
+
+    private List<Guitarras>? produtos = null;
 }

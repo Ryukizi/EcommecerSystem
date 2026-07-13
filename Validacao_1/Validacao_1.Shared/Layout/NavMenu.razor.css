@@ -1,0 +1,21 @@
+/* ==========================================
+   MENU DROPDOWN HOVER E AJUSTE DE TAMANHO
+   ========================================== */
+@media (min-width: 992px) {
+    .dropdown-hover:hover .dropdown-menu {
+        display: block;
+        margin-top: 0;
+    }
+}
+
+/* Modificações no tamanho do menu */
+.dropdown-hover .dropdown-menu {
+    min-width: 260px; /* Aumenta a largura do painel */
+    padding: 12px; /* Dá mais espaço interno para os itens */
+    border-radius: 8px;
+}
+
+.dropdown-hover .dropdown-item {
+    padding: 8px 12px; /* Aumenta a área de clique de cada opção */
+    font-size: 0.95rem; /* Ajusta o tamanho da fonte */
+}
