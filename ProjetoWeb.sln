@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Validacao_1.Shared", "Valid
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Validacao_1.Web", "Validacao_1\Validacao_1.Web\Validacao_1.Web.csproj", "{D4C1ED3E-6C58-4944-A0BE-861482C951C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinhaApiCep", "..\MinhaApiCep\MinhaApiCep.csproj", "{D6A3AE8A-CE61-6D8A-CEB0-FFED35C8C1E5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinhaApiCep", "MinhaApiCep\MinhaApiCep.csproj", "{5F3943CA-20BA-BC31-21C1-7CE387C0C60F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{D4C1ED3E-6C58-4944-A0BE-861482C951C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4C1ED3E-6C58-4944-A0BE-861482C951C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4C1ED3E-6C58-4944-A0BE-861482C951C1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D6A3AE8A-CE61-6D8A-CEB0-FFED35C8C1E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D6A3AE8A-CE61-6D8A-CEB0-FFED35C8C1E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D6A3AE8A-CE61-6D8A-CEB0-FFED35C8C1E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D6A3AE8A-CE61-6D8A-CEB0-FFED35C8C1E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F3943CA-20BA-BC31-21C1-7CE387C0C60F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F3943CA-20BA-BC31-21C1-7CE387C0C60F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F3943CA-20BA-BC31-21C1-7CE387C0C60F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F3943CA-20BA-BC31-21C1-7CE387C0C60F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
