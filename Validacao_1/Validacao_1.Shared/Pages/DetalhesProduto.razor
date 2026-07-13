@@ -2,6 +2,7 @@
 @inject ProdutoService ProdutosServices
 @inject NavigationManager Navigation
 @inject CarrinhoService CarrinhosServices
+@inject HttpClient Http
 
 <div class="container-fluid bg-dark text-light min-vh-100 py-5">
     <div class="container">
@@ -68,18 +69,47 @@
                         </button>
                     </div>
 
-                    <div class="mb-4 mt-4">
-                        <form class="d-flex" role="search">
-                            <input class="form-control form-control-sm me-2 rounded-2 text-light border-secondary" type="search" placeholder="Calcular CEP" aria-label="Search" style="max-width: 150px;" />
-                            <button class="btn btn-outline-warning btn-sm" type="submit">Buscar</button>
-                        </form>
+                    <div class="mb-4 mt-4 col-lg-8">
+                        <div class="d-flex">
+                            <input class="form-control form-control-sm me-2 rounded-2 bg-secondary text-light border-secondary px-3"
+                                   type="text" placeholder="Calcular CEP" @bind="cep" maxlength="9" style="max-width: 150px;" />
+                            <button class="btn btn-outline-warning btn-sm px-3" type="button" @onclick="ConsultarFreteProdutoAsync" disabled="@loading">
+                                @if (loading)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                }
+                                else
+                                {
+                                    <span>Buscar</span>
+                                }
+                            </button>
+                        </div>
+
+                        @if (resultadoFrete != null)
+                        {
+                            <div class="mt-3 p-3 bg-secondary rounded-3 small border border-secondary" style="max-width: 350px;">
+                                <p class="text-warning mb-2 fw-bold">Frete para: @resultadoFrete.Cidade - @resultadoFrete.Estado</p>
+
+                                <div class="d-flex justify-content-between mb-1 text-light">
+                                    <span>🚚 PAC (Econômico):</span>
+                                    <span class="text-success fw-bold">R$ @resultadoFrete.ValorPac.ToString("N2")</span>
+                                </div>
+                                <div class="text-muted mb-2 ps-3" style="font-size: 0.8rem;">Prazo estimado: @resultadoFrete.PrazoPac</div>
+
+                                <div class="d-flex justify-content-between mb-1 text-light">
+                                    <span>⚡ SEDEX (Expresso):</span>
+                                    <span class="text-success fw-bold">R$ @resultadoFrete.ValorSedex.ToString("N2")</span>
+                                </div>
+                                <div class="text-muted ps-3" style="font-size: 0.8rem;">Prazo estimado: @resultadoFrete.PrazoSedex</div>
+                            </div>
+                        }
                     </div>
+
                 </div>
             </div>
         }
     </div>
 </div>
-
 
 @code {
     [Parameter]
@@ -87,12 +117,18 @@
 
     private Guitarras? produto;
     private string _mensagemErro = "";
+    private string tipoFreteSelecionado = "";
+    private decimal valorFreteSelecionado = 0;
+
+    // Variáveis da API de Frete
+    private string cep = "";
+    private bool loading = false;
+    private RespostaApiFrete? resultadoFrete;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // Chamamos o serviço passando o Id que veio da URL
             produto = await ProdutosServices.GetProdutoByIdAsync(Id);
         }
         catch (Exception ex)
@@ -105,10 +141,50 @@
     {
         if (produto != null)
         {
-            // Adicionado 'await' e o 'Async' no final do método
             await CarrinhosServices.Adicionar(produto);
-
             Navigation.NavigateTo("/carrinho");
         }
+    }
+
+    // Método que consome a API compartilhada
+    private async Task ConsultarFreteProdutoAsync()
+    {
+        if (string.IsNullOrWhiteSpace(cep)) return;
+
+        string cepLimpo = cep.Replace("-", "").Trim();
+        if (cepLimpo.Length != 8) return;
+
+        loading = true;
+        resultadoFrete = null;
+        ResetarFrete();
+
+        try
+        {
+            // Burlamos o bloqueio de SSL criando o handler local seguro igualzinho ao do produto
+            using var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            };
+            using var clientLocal = new HttpClient(handler);
+
+            string urlSuaApi = $"https://localhost:7169/cep/{cepLimpo}";
+
+            // Fazemos a chamada com o cliente local
+            resultadoFrete = await clientLocal.GetFromJsonAsync<RespostaApiFrete>(urlSuaApi);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao buscar frete no carrinho: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void ResetarFrete()
+    {
+        tipoFreteSelecionado = ""; // Limpa se era PAC ou SEDEX
+        valorFreteSelecionado = 0; // Zera o valor cobrado
     }
 }
