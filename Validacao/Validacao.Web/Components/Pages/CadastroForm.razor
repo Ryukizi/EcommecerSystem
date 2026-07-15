@@ -1,0 +1,307 @@
+﻿@page "/cadastro"
+@using Validacao.Application.Interfaces
+@rendermode InteractiveServer
+@inject IValidadorService Validador
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject IEmailService EmailServico
+@inject IConfiguration Config
+@inject HttpClient httpClient
+
+<div class="login-container">
+    <PageTitle>Cadastro</PageTitle>
+
+    <div class="container mt-4 glass-card p-4" style="max-width: 550px;">
+
+        <AuthorizeView>
+            <Authorized>
+                <div class="alert alert-success text-center" role="alert">
+                    🎉 <strong>Cadastro Realizado com sucesso!</strong>
+                    <div>Redirecionando para o painel principal...</div>
+                </div>
+            </Authorized>
+
+            <NotAuthorized>
+                @if (_mostrarCampoCodigo)
+                {
+                    <div class="alert alert-success mt-3 text-center bg-opacity-70" role="alert">
+                        <label class="form-label fw-bold text-success mb-2">Digite o código de verificação enviado para seu email:</label>
+
+                        <div class="d-flex justify-content-center gap-2 my-3">
+                            <input @ref="inputRef0" type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" class="form-control text-center fw-bold fs-4 glass-input" style="width: 55px; height: 55px;" @bind="_digitosCodigo[0]" @bind:event="oninput" @onkeyup="() => MudarFoco(0)" />
+                            <input @ref="inputRef1" type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" class="form-control text-center fw-bold fs-4 glass-input" style="width: 55px; height: 55px;" @bind="_digitosCodigo[1]" @bind:event="oninput" @onkeyup="() => MudarFoco(1)" />
+                            <input @ref="inputRef2" type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" class="form-control text-center fw-bold fs-4 glass-input" style="width: 55px; height: 55px;" @bind="_digitosCodigo[2]" @bind:event="oninput" @onkeyup="() => MudarFoco(2)" />
+                            <input @ref="inputRef3" type="text" maxlength="1" pattern="[0-9]*" inputmode="numeric" class="form-control text-center fw-bold fs-4 glass-input" style="width: 55px; height: 55px;" @bind="_digitosCodigo[3]" @bind:event="oninput" @onkeyup="() => MudarFoco(3)" />
+                        </div>
+
+                        <button type="button" class="btn btn-glass w-100" @onclick="VerificarCodigo">Verificar Código</button>
+                    </div>
+                }
+
+                @if (!_mostrarCampoCodigo)
+                {  
+                    <h2 class="text-center mb-4">Criar Nova Conta</h2>
+
+                    @if (!string.IsNullOrEmpty(_respostaBasica))
+                    {
+                        <div class="alert alert-primary text-center mt-3" role="alert">
+                            <strong>Validação:</strong>
+                            <div>@_respostaBasica</div>
+                            @if (!string.IsNullOrEmpty(_nomeResposta))
+                            {
+                                <div>@_nomeResposta</div>
+                            }
+                            @if (!string.IsNullOrEmpty(_emailResposta))
+                            {
+                                <div>@_emailResposta</div>
+                            }
+                            @if (!string.IsNullOrEmpty(_senhaResposta))
+                            {
+                                <div>@_senhaResposta</div>
+                            }
+                        </div>
+                    }
+
+                    <div class="form-group mt-3">
+                        <label class="form-label fw-bold">Idade</label>
+                        <input type="number" pattern="[0-9]*" class="form-control glass-input" @bind="_idade"
+                               onkeypress="return event.key !== '.' && event.key !== ',';" placeholder="Digite sua idade" />
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label class="form-label fw-bold">Nome Completo</label>
+                        <input type="text" pattern="[A-Za-zÀ-ÿ\s]+" inputmode="text" class="form-control glass-input" @bind="_nome"
+                               oninput="this.value = this.value.replace(/[0-9]/g, '')" placeholder="Digite apenas letras"
+                               onkeypress="return event.key !== '.' && event.key !== ',';" />
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label class="form-label fw-bold">E-mail</label>
+                        <input type="text" class="form-control glass-input" @bind="_email" placeholder="Digite seu Email" />
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label class="form-label fw-bold">Senha</label>
+                        <input type="password" class="form-control glass-input" @bind="_senha" placeholder="Digite sua Senha" />
+                    </div>
+
+                    <button class="btn btn-glass mt-4 w-100" @onclick="async () => await OnClickPessoa(_idade, _nome, _email, _senha)">
+                        Cadastrar
+                    </button>
+
+                    <div class="d-flex justify-content-center mt-3" style="position: relative; z-index: 3;">
+                        <button type="button" class="btn btn-glass-secondary w-50 fw-bold" @onclick="Login">
+                            Voltar para o Login
+                        </button>
+                    </div>
+                }
+            </NotAuthorized>
+        </AuthorizeView>
+
+    </div>
+</div>
+
+@code {
+    private string _respostaBasica = "";
+    private string _emailResposta = "";
+    private string _senhaResposta = "";
+    private string _nomeResposta = "";
+    private int _idade;
+    private string _nome = "";
+    private string _email = "";
+    private string _senha = "";
+    private bool _mostrarCampoCodigo = false;
+    private string _codigoEnviado = "";
+    private int _codigoCorreto;
+    private string[] _digitosCodigo = new string[4] { "", "", "", "" };
+    private ElementReference inputRef0;
+    private ElementReference inputRef1;
+    private ElementReference inputRef2;
+    private ElementReference inputRef3;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var usuario = await AuthService.ObterUsuarioAtual();
+
+            if (usuario.Identity is not null && usuario.Identity.IsAuthenticated)
+            {
+                await Task.Delay(3000);
+                Navigation.NavigateTo("/");
+            }
+        }
+    }
+
+    public async Task getValidador(Pessoa pessoa)
+    {
+        try
+        {
+            _respostaBasica = "Processando validação...";
+            StateHasChanged();
+
+            var resultado = await Validador.EntradaDeDados(pessoa);
+
+            // Evita NullReferenceException tratando o retorno nulo com segurança
+            _emailResposta = resultado != null && resultado.Count > 0 ? resultado[0] : "";
+            _senhaResposta = resultado != null && resultado.Count > 1 ? resultado[1] : "";
+            _nomeResposta = resultado != null && resultado.Count > 2 ? resultado[2] : "";
+
+            if (resultado == null || resultado.Count == 0 || IsFormularioValido())
+            {
+                _respostaBasica = "Dados validados com sucesso! Enviando código...";
+                StateHasChanged();
+
+                _codigoCorreto = await AuthService.SolicitarCodigoEnvioAsync(pessoa.Email);
+                _digitosCodigo = new string[4] { "", "", "", "" };
+
+                _mostrarCampoCodigo = true;
+                _respostaBasica = "Código enviado com sucesso!";
+            }
+            else
+            {
+                _respostaBasica = resultado.Count == 1 ? resultado[0] : "Existem erros de validação no formulário.";
+                _mostrarCampoCodigo = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DEBUG-VALIDADOR] Erro completo: {ex}");
+            _respostaBasica = $"Erro ao enviar o e-mail de confirmação: {ex.Message}";
+            _mostrarCampoCodigo = false;
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private async Task VerificarCodigo()
+    {
+        _codigoEnviado = string.Join("", _digitosCodigo).Trim();
+
+        // 1. Validação: Campo vazio
+        if (string.IsNullOrEmpty(_codigoEnviado))
+        {
+            _respostaBasica = "Por favor, digite o código de 4 dígitos.";
+            StateHasChanged();
+            return;
+        }
+
+        // 2. Validação: Código incorreto (Tratamos o erro primeiro!)
+        if (_codigoEnviado != _codigoCorreto.ToString())
+        {
+            await TratarCodigoIncorreto();
+            return;
+        }
+
+        // 3. Caminho de Sucesso (Sem aninhamento desnecessário)
+        try
+        {
+            Console.WriteLine("[CADASTRO] 🚀 Iniciando processo de finalização...");
+            _respostaBasica = "Verificando e finalizando cadastro...";
+            StateHasChanged();
+
+            var novoUsuarioDto = new UsuarioCadastroDto
+            {
+                Nome = _nome,
+                Idade = _idade,
+                Email = _email,
+                Senha = _senha
+            };
+
+            // Salva no banco e já autentica o usuário no front-end de uma vez só!
+            Console.WriteLine("[CADASTRO] 💾 Gravando usuário e criando sessão...");
+            await AuthService.CadastrarUsuarioCompletoAsync(novoUsuarioDto);
+            Console.WriteLine("[CADASTRO] ✅ Cadastro e sessão criados com sucesso!");
+
+            _respostaBasica = "Cadastro realizado com sucesso! Redirecionando...";
+            _mostrarCampoCodigo = false;
+            StateHasChanged();
+
+            Console.WriteLine("[CADASTRO] 🔄 Redirecionando para a Home...");
+            await Task.Delay(1500);
+
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CADASTRO - ERRO] Falha no fluxo de finalização: {ex}");
+            _respostaBasica = $"Erro ao salvar o cadastro: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    // Método auxiliar isolado para manter a organização
+    private async Task TratarCodigoIncorreto()
+    {
+        _respostaBasica = "Código de verificação incorreto. Tente novamente.";
+        _digitosCodigo = new string[4] { "", "", "", "" };
+        _mostrarCampoCodigo = true;
+        StateHasChanged();
+
+        await Task.Delay(50);
+        try
+        {
+            await inputRef0.FocusAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao focar: {ex.Message}");
+        }
+    }
+
+    private bool IsFormularioValido()
+    {
+        return string.IsNullOrEmpty(_emailResposta) &&
+               string.IsNullOrEmpty(_senhaResposta) &&
+               string.IsNullOrEmpty(_nomeResposta);
+    }
+
+    private async Task OnClickPessoa(int idade, string nome, string email, string senha)
+    {
+        var _pessoa = new Pessoa
+        {
+            Nome = nome,
+            Idade = idade,
+            Email = email,
+            Senha = senha
+        };
+        await getValidador(_pessoa);
+    }
+
+    private async Task Login()
+    {
+        Navigation.NavigateTo("/login", forceLoad: true);
+        await Task.CompletedTask;
+    }
+
+    private async Task MudarFoco(int index)
+    {
+        // Se o usuário digitou algo no campo atual, joga o foco para o próximo
+        if (!string.IsNullOrEmpty(_digitosCodigo[index]))
+        {
+            switch (index)
+            {
+                case 0:
+                    await inputRef1.FocusAsync();
+                    break;
+                case 1:
+                    await inputRef2.FocusAsync();
+                    break;
+                case 2:
+                    await inputRef3.FocusAsync();
+                    break;
+                case 3:
+                    // Apenas valida se todos os campos estiverem preenchidos
+                    if (_digitosCodigo.All(d => !string.IsNullOrEmpty(d)))
+                    {
+                        await VerificarCodigo();
+                    }
+                    break;
+            }
+        }
+    }
+}
+}
+

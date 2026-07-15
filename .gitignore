@@ -364,3 +364,4 @@ FodyWeavers.xsd
 
 # Configuracoes Locais com Senhas (Nao subir para GitHub)
 appsettings.Development.json
+appsettings.json
