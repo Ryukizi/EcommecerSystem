@@ -1,0 +1,169 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@using Validacao.Infrastructure.Services
+@using Validacao.Shared.Dtos
+@using Validacao.Web.Services
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject HttpClient HttpClient
+
+<div class="login-container">
+    <PageTitle>Login</PageTitle>
+
+    <div class="container glass-card p-4" style="max-width: 500px;">
+        <AuthorizeView>
+            <Authorized>
+                <div class="alert alert-success text-center" role="alert">
+                    🎉 <strong>Você já está conectado!</strong>
+                    <div>Bem-vindo de volta! Redirecionando...</div>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <h2 class="text-center mb-4">Entrar no Sistema</h2>
+
+                @if (!string.IsNullOrEmpty(_mensagemResultado))
+                {
+                    <div class="alert @(_loginSucesso ? "alert-success" : "alert-danger") mt-3" role="alert">
+                        @_mensagemResultado
+                    </div>
+                }
+
+                <div class="form-group mt-3">
+                    <label class="form-label fw-bold">Digite seu Email</label>
+                    <input type="text" class="form-control glass-input" @bind="_emailInput" placeholder="Digite seu Email" />
+                </div>
+
+                <div class="form-group mt-3">
+                    <label class="form-label fw-bold">Digite sua Senha</label>
+                    <input type="password" class="form-control glass-input" @bind="_passwordInput" placeholder="Digite sua Senha" />
+                </div>
+
+                <button class="btn btn-glass mt-4 w-100" @onclick="Execute">Entrar</button>
+
+                <div class="text-center mt-3" style="position: relative; z-index: 3;">
+                    <button type="button" class="btn-glass-secondary w-50 fw-bold" style="color: #F0ad4e; border-color: #F0ad4e;" @onclick="IrParaCadastro">
+                        Cadastrar-se
+                    </button>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+@code {
+    private string _emailInput = "";
+    private string _passwordInput = "";
+    private string _mensagemResultado = "";
+    private bool _loginSucesso = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var estadoAutenticacao = await AuthStateProvider.GetAuthenticationStateAsync();
+            var usuario = estadoAutenticacao.User;
+
+            if (usuario.Identity is not null && usuario.Identity.IsAuthenticated)
+            {
+                await Task.Delay(3000);
+                Navigation.NavigateTo("/");
+            }
+        }
+    }
+
+    private async Task Execute()
+    {
+        if (!ValidadorCamposEntrada())
+        {
+            _mensagemResultado = "Por favor, preencha todos os campos.";
+            _loginSucesso = false;
+            return;
+        }
+
+        try
+        {
+            _mensagemResultado = "Autenticando...";
+            _loginSucesso = false;
+            StateHasChanged();
+
+            // 📦 Empacota as credenciais no DTO de login
+            var loginDto = new UsuarioLoginDto
+            {
+                Email = _emailInput,
+                Senha = _passwordInput
+            };
+
+            // 📡 Envia a requisição POST para o endpoint da sua API
+            var response = await HttpClient.PostAsJsonAsync("https://localhost:7021/api/Usuario/login", loginDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // 🔓 Lê a resposta de sucesso contendo os dados do usuário validados pela API
+                var resultado = await response.Content.ReadFromJsonAsync<RespostaLogin>();
+
+                if (resultado != null && resultado.Usuario != null)
+                {
+                    _loginSucesso = true;
+                    _mensagemResultado = $"Bem-vindo, {resultado.Usuario.Nome}!";
+                    StateHasChanged();
+
+                    // 💾 Inicia a sessão local usando os dados recebidos da API
+                    await RealizarLoginSessao(resultado.Usuario);
+
+                    await Task.Delay(2000);
+                    Navigation.NavigateTo("/", forceLoad: true);
+                }
+                else
+                {
+                    _loginSucesso = false;
+                    _mensagemResultado = "Falha ao ler os dados do usuário.";
+                }
+            }
+            else
+            {
+                _loginSucesso = false;
+                var erroApi = await response.Content.ReadAsStringAsync();
+
+                _mensagemResultado = $"Erro ({response.StatusCode}): {erroApi}";
+
+                if (string.IsNullOrWhiteSpace(erroApi))
+                {
+                    _mensagemResultado = $"Erro no servidor local. Código HTTP: {response.StatusCode }";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _loginSucesso = false;
+            _mensagemResultado = $"Erro ao tentar realizar login: {ex.Message}";
+        }
+    }
+
+    private bool ValidadorCamposEntrada()
+    {
+        return !string.IsNullOrWhiteSpace(_emailInput) && !string.IsNullOrWhiteSpace(_passwordInput);
+    }
+
+    private async Task RealizarLoginSessao(UsuarioInfo usuario)
+    {
+        var sessaoSimulada = new
+        {
+            user = new
+            {
+                email = usuario.Email,
+                id = usuario.Id,
+                perfil = usuario.Perfil
+            }
+        };
+
+        var sessionJson = System.Text.Json.JsonSerializer.Serialize<object>(sessaoSimulada);
+
+        await ((SupaBaseAuthStateProviderService)AuthStateProvider).MarcarComoLogado(sessionJson);
+    }
+
+    private void IrParaCadastro()
+    {
+        Navigation.NavigateTo("/cadastro");
+    }
+}
