@@ -1,11 +1,4 @@
-﻿using Supabase;
-using Supabase.Postgrest;
-using Supabase.Postgrest.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
+﻿using System.Net.Http.Json;
 using Validacao.Application.Interfaces;
 using Validacao.Shared.Dtos;
 

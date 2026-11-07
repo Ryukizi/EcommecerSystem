@@ -1,5 +1,4 @@
 ﻿@page "/dashboard"
-@using Validacao.Application.Interfaces
 @inject NavigationManager Navigation
 @inject IAuthService AuthService
 
@@ -55,6 +54,8 @@
 </div>
 
 @code {
+    private string role = "";
+
     private string _respostaBasica = "";
 
     private async Task ExecutarLogout()
@@ -70,4 +71,5 @@
             _respostaBasica = $"Erro ao deslogar: {ex.Message}";
         }
     }
+
 }

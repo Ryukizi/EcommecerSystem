@@ -3,28 +3,30 @@
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Validacao.Application.Interfaces;
+using Validacao.Infrastructure.Services;
 using Validacao.Shared.Dtos;
-using Validacao.Shared.Models;
-
 
 public class CarrinhoService
 {
     // 1. Declare o campo privado para o HttpClient
     private readonly HttpClient _httpClient;
     private readonly IJSRuntime _js;
+    private readonly IFreteService _freteService;
 
     private List<Guitarras> _itens = new List<Guitarras>();
+    private const string CarrinhoStorageKey = "carrinho_v2";
 
-    private const string CarrinhoStorageKey = "carrinho_v2"; // Mudamos a chave para limpar o histórico antigo sem Nome/Marca
-
-    public CarrinhoService(IJSRuntime js, HttpClient httpClient)
+    public CarrinhoService(IJSRuntime js, HttpClient httpClient, IFreteService freteService)
     {
         _js = js;
         _httpClient = httpClient;
+        _freteService = freteService;
     }
 
     public IReadOnlyList<Guitarras> Itens => _itens.AsReadOnly();
@@ -124,21 +126,28 @@ public class CarrinhoService
         catch { }
     }
 
-    public async Task<RespostaFreteDto?> CalcularFreteAsync(string cep)
+    public async Task<List<FreteDto>> CalcularFreteAsync(string cep)
     {
         try
         {
-            string cepLimpo = cep.Replace("-", "").Trim();
+            Debug.WriteLine($"[2] CarrinhoService acionado com o CEP: {cep}");
+            string cepLimpo = cep.Replace("-", "").Trim() ?? string.Empty;
+
+            Debug.WriteLine($"[CarrinhoService] CEP limpo para consulta: '{cepLimpo}' (Tamanho: {cepLimpo.Length})");
+
             if (cepLimpo.Length != 8) return null;
 
-            string rotaApi = $"cep/{cepLimpo}";
+            Debug.WriteLine("Codigo Rodando via API HTTP");
 
-            // O seu CarrinhoService provavelmente já recebe o HttpClient no construtor
-            return await _httpClient.GetFromJsonAsync<RespostaFreteDto>(rotaApi);
+            // CORRIGIDO: Faz a chamada HTTP para a API backend em vez de executar localmente no Blazor
+            var resultado = await _httpClient.GetFromJsonAsync<List<FreteDto>>($"api/cep/{cepLimpo}");
+
+            Console.WriteLine(resultado != null ? "[3] Frete calculado com sucesso pela API." : "[AVISO] Frete retornou nulo.");
+            return resultado;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao buscar frete no CarrinhoService: {ex.Message}");
+            Debug.WriteLine($"Erro ao buscar frete no CarrinhoService: {ex.Message}");
             return null;
         }
     }

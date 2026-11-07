@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Supabase;
-using Validacao.Application.Interfaces;
+﻿using Supabase;
+using Validacao.Application.Interfaces.Repositories;
 
 
-namespace Validacao.Infrastructure.Services
+namespace Validacao.Infrastructure.Repositories
 {
     public class UsuarioRepository : IUsuarioRepository
     {

@@ -1,10 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Validacao.Application.Interfaces;
+using Validacao.Application.Interfaces.Repositories;
 using Validacao.Shared.Dtos;
-using Validacao.Shared.Models;
 
 namespace Validacao.Aplication.Service
 {
@@ -118,6 +115,19 @@ namespace Validacao.Aplication.Service
             await _emailServico.EnviarEmailCodigo(email, codigo);
 
             return codigo;
+        }
+        public async Task<UsuarioLoginDto> ObterPerfilAsync(UsuarioLoginDto request) // 👈 Retorno ajustado para UsuarioLoginDto
+        {
+            var usuario = await _usuarioRepository.ObterPorEmailAsync(request.Email);
+            if (usuario == null)
+            {
+                throw new Exception("Usuário não encontrado.");
+            }
+
+            return new UsuarioLoginDto
+            {
+                Email = usuario.Email
+            };
         }
     }
 }

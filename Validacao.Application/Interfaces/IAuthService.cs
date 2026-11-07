@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using System.Threading.Tasks;
 using Validacao.Shared.Dtos;
 
 namespace Validacao.Application.Interfaces

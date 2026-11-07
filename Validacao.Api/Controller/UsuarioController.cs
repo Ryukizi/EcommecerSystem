@@ -1,20 +1,23 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using Validacao.Application.Interfaces;
 using Validacao.Shared.Dtos;
 
-namespace Validacao.Api.Controllers // 💡 Correção no namespace (Controllers no plural é o padrão)
+namespace Validacao.Api.Controllers 
 {
     [ApiController]
-    [Route("api/usuario")] // 💡 Forçamos a rota base em minúsculo para bater com o HttpClient do Blazor
+    [Route("api/usuario")] // 
     public class UsuarioController : ControllerBase
     {
         private readonly IUsuarioAppService _usuarioAppService;
+        private readonly IConfiguration _configuration;
 
-        public UsuarioController(IUsuarioAppService usuarioAppService)
+        public UsuarioController(IUsuarioAppService usuarioAppService, IConfiguration configuration)
         {
             _usuarioAppService = usuarioAppService;
+            _configuration = configuration;
         }
 
         [HttpPost]
@@ -45,6 +48,7 @@ namespace Validacao.Api.Controllers // 💡 Correção no namespace (Controllers
             {
                 var resultado = await _usuarioAppService.LoginAsync(request);
                 return Ok(resultado);
+
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -55,6 +59,36 @@ namespace Validacao.Api.Controllers // 💡 Correção no namespace (Controllers
                 return BadRequest(new { mensagem = $"Erro ao tentar logar: {ex.Message}" });
             }
         }
+
+
+        [Authorize]
+        [HttpGet("perfil")]
+        public async Task<IActionResult> GetPerfil()
+        {
+            try
+            {
+                // 1. Extrai o e-mail das Claims do Token JWT
+                var email = User.FindFirst(ClaimTypes.Email)?.Value;
+
+                // 2. Monta o DTO esperado pelo método
+                var dto = new UsuarioLoginDto
+                {
+                    Email = email
+                };
+
+                // 3. Chama o método passando o DTO
+                var perfil = await _usuarioAppService.ObterPerfilAsync(dto);
+                Console.WriteLine(perfil + "sucesso");
+                return Ok(perfil);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { mensagem = ex.Message });
+                Console.WriteLine("Sem sucesso");
+            }
+        }
+
+
 
         // 💡 Rota alterada para "verificar-email" e retorno adaptado para o que o Blazor espera!
         [HttpGet("verificar-email")]

@@ -1,7 +1,11 @@
-﻿using Supabase;
+﻿using System.Text;
 using Validacao.Aplication.Service;
 using Validacao.Application.Interfaces;
+using Validacao.Application.Interfaces.Repositories;
+using Validacao.Infrastructure.Repositories;
 using Validacao.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,31 +19,55 @@ builder.Services.AddCors(options =>
     });
 });
 
+var jwtKey = builder.Configuration["Jwt:Key"] ?? string.Empty;
+var keyBytes = Encoding.ASCII.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(options =>
+{
+    // CORRIGIDO: Usando as constantes corretas do JwtBearerDefaults
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddHttpClient<FreteService>();
+builder.Services.AddControllers(); // Essencial para os Controllers funcionarem!
 
-// 💡 Registra o serviço de aplicação de produtos
+// CORRIGIDO: Registro tipificado do HttpClient para o FreteService
+builder.Services.AddHttpClient<FreteService>(client =>
+{
+    // Configure aqui a URL base da API externa de CEP, caso o FreteService faça chamadas externas
+    // client.BaseAddress = new Uri("https://viacep.com.br/"); 
+});
+
+// Registros de Serviços
 builder.Services.AddScoped<IProdutoService, ProdutoService>();
-
-// 💡 Registra o serviço de criptografia para que a API consiga usá-lo nos controllers
 builder.Services.AddScoped<ICriptografiaServico, CriptografiaServico>();
-// Adicione o registro do seu validador (use o escopo adequado, geralmente Scoped ou Transient)
 builder.Services.AddScoped<IValidadorService, ValidadorService>();
-
 builder.Services.AddScoped<IEmailService, EmailServico>();
-
 builder.Services.AddScoped<IUsuarioAppService, UsuarioAppService>();
-
-// Diz ao sistema: "Quando alguém pedir IUsuarioRepository, entrega o UsuarioRepository da Infra"
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IFreteService, FreteService>();
 
 string urlSupabase = builder.Configuration["Supabase:Url"] ?? string.Empty;
 string chaveSupabase = builder.Configuration["Supabase:Chave"] ?? string.Empty;
 
-var baseUrl = builder.Configuration["Smtp:Senha"] ?? string.Empty;
-
-// 💡 Validação para garantir que as chaves não estão vindo vazias do appsettings.json
 if (string.IsNullOrEmpty(urlSupabase) || string.IsNullOrEmpty(chaveSupabase))
 {
     throw new InvalidOperationException("ERRO CRÍTICO: As credenciais do Supabase não foram encontradas no appsettings.json da API!");
@@ -48,32 +76,33 @@ if (string.IsNullOrEmpty(urlSupabase) || string.IsNullOrEmpty(chaveSupabase))
 var opcoes = new Supabase.SupabaseOptions { AutoConnectRealtime = true };
 builder.Services.AddSingleton(provider => new Supabase.Client(urlSupabase, chaveSupabase, opcoes));
 
-
 var app = builder.Build();
 
-app.UseCors("LiberarBlazor"); // 2. ADICIONE ISSO: Aplica a política de CORS)
-
-app.MapGet("/", () => "Minha API de CEP está online e organizada! 🚀");
-
-// Configure the HTTP request pipeline.
+// Pipeline de execução do HTTP (Middlewares)
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 app.UseRouting();
 
+// IMPORTANTE: O UseCors DEVE vir antes da Autenticação/Autorização e rotas
+app.UseCors("LiberarBlazor");
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
 
-// A rota agora apenas chama o serviço e decide o que responder (Foco total em HTTP)
+app.MapGet("/", () => "Minha API de CEP está online e organizada! 🚀");
+
+// O seu MapGet de CEP continua funcionando perfeitamente aqui
 app.MapGet("/cep/{numeroCep}", async (string numeroCep, FreteService freteService) =>
 {
     var resultado = await freteService.CalcularFreteAsync(numeroCep);
@@ -86,7 +115,6 @@ app.MapGet("/cep/{numeroCep}", async (string numeroCep, FreteService freteServic
     return Results.Ok(resultado);
 });
 
-// Garanta que esta linha também existe!
 app.MapControllers();
 
 app.Run();

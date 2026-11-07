@@ -2,8 +2,6 @@
 using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
-using System;
-using System.Threading.Tasks;
 using Validacao.Application.Interfaces; // Importa a interface
 
 namespace Validacao.Infrastructure.Services

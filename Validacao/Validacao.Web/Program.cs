@@ -2,9 +2,11 @@
 using MailKit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Supabase;
 using System;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using Validacao.Application.Interfaces;
 using Validacao.Infrastructure.Services;
 using Validacao.Web;
@@ -67,9 +69,11 @@ builder.Services.AddScoped<CriptografiaServico>();
 builder.Services.AddTransient<IEmailService, EmailServico>();
 builder.Services.AddScoped<CarrinhoService>();
 
+builder.Services.AddScoped<IFreteService, FreteService>();
+
+
 // Registros de Serviços de Produto (Limpo e sem duplicidade)
 builder.Services.AddScoped<Validacao.Application.Interfaces.IProdutoService, Validacao.Infrastructure.Services.ProdutoService>();
-
 
 var app = builder.Build();
 
@@ -89,3 +93,7 @@ app.MapRazorComponents<App>()
    .AddInteractiveServerRenderMode();
 
 app.Run();
+
+// Rodar esses comandos para restaurar e compilar a solução
+// dotnet restore
+// dotnet build
