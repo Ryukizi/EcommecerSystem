@@ -5,8 +5,6 @@ Projeto de **e-commerce desenvolvido para fins de estudo e aprimoramento em dese
 A aplicação está sendo construída com foco em uma arquitetura organizada e escalável, explorando conceitos de **desenvolvimento backend, APIs, autenticação, banco de dados e integração entre diferentes tecnologias**.
 
 > 🚧 **Status: Em desenvolvimento**
->
-> O desenvolvimento do projeto está temporariamente pausado. A última etapa iniciada foi a implementação do sistema de **autenticação utilizando JWT (JSON Web Token)**.
 
 ## 🛠️ Tecnologias utilizadas
 
