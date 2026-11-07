@@ -66,7 +66,7 @@ O principal objetivo deste projeto é colocar em prática conhecimentos adquirid
 
 ## 🚧 Status do projeto
 
-**Em desenvolvimento — temporariamente pausado.**
+**Em desenvolvimento**
 
 O projeto possui uma base de desenvolvimento já construída, porém sua implementação foi pausada durante a etapa de desenvolvimento da **autenticação com JWT**.
 
