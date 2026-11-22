@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Validacao.Shared.Models;
+﻿using Validacao.Shared.Models;
 
 namespace Validacao.Application.Interfaces
 {

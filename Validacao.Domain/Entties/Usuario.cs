@@ -1,10 +1,5 @@
 ﻿using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 [Table("usuarios")]
 public class Usuario : BaseModel
@@ -26,4 +21,10 @@ public class Usuario : BaseModel
 
     [Column("perfil")]
     public string Perfil { get; set; } = "Usuario";
+
+    [Column("refresh_token")]
+    public string? RefreshToken { get; set; }
+
+    [Column("refresh_token_expiracao")]
+    public DateTime? RefreshTokenExpiracao { get; set; }
 }

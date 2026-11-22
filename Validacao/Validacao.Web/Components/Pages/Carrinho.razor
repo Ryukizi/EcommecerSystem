@@ -1,8 +1,4 @@
 ﻿@page "/carrinho"
-@using Validacao.Shared.Dtos
-@using Validacao.Shared.Models
-@using Validacao.Web.Services
-
 @inject CarrinhoService CarrinhosServices
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider
@@ -78,7 +74,7 @@
                         <label class="form-label text-muted small fw-bold text-uppercase">Calcular Frete</label>
                         <div class="d-flex gap-2">
                             <input class="form-control form-control-sm bg-secondary text-light border-0 rounded-pill px-3"
-                                   type="text" placeholder="00000-000" @bind="cep" @bind:event="oninput" maxlength="9" />
+                                   type="text" placeholder="00000-000" @bind="cep" maxlength="9" />
                             <button class="btn btn-warning btn-sm rounded-pill px-3 fw-bold" @onclick="ConsultarFreteProdutoAsync" disabled="@loading">
                                 @if (loading)
                                 {
@@ -94,25 +90,25 @@
                         @if (resultadoFrete != null)
                         {
                             <div class="mt-3 p-3 bg-secondary rounded-3 text-start small">
-                                <p class="text-warning fw-bold mb-2">Enviar para: @resultadoFrete.Cidade/@resultadoFrete.Estado</p>
+                                <p class="text-warning fw-bold mb-2">Enviar para: @resultadoFrete?.FirstOrDefault()?.Uf</p>
 
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="radio" name="freteOption" id="frete-pac"
                                            checked="@(tipoFreteSelecionado == "PAC")"
-                                           @onchange='() => { SelecionarTipoFrete("PAC", resultadoFrete.ValorPac); }' />
+                                           @onchange='() => { SelecionarTipoFrete("PAC", resultadoFrete?.FirstOrDefault()?.ValorPac ?? 0); }' />
                                     <label class="form-check-label text-light cursor-pointer" for="frete-pac">
                                         <strong>PAC (Econômico)</strong> <br />
-                                        <span class="text-success fw-bold">R$ @resultadoFrete.ValorPac.ToString("N2")</span> — @resultadoFrete.PrazoPac
+                                        <span class="text-success fw-bold">R$ @resultadoFrete?.FirstOrDefault()?.ValorPac.ToString("N2")</span> — @resultadoFrete?.FirstOrDefault()?.PrazoPac
                                     </label>
                                 </div>
 
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="freteOption" id="frete-sedex"
                                            checked="@(tipoFreteSelecionado == "SEDEX")"
-                                           @onchange='() => { SelecionarTipoFrete("SEDEX", resultadoFrete.ValorSedex); }' />
+                                           @onchange='() => { SelecionarTipoFrete("SEDEX", resultadoFrete?.FirstOrDefault()?.ValorSedex ?? 0); }' />
                                     <label class="form-check-label text-light cursor-pointer" for="frete-sedex">
                                         <strong>SEDEX (Expresso)</strong> <br />
-                                        <span class="text-success fw-bold">R$ @resultadoFrete.ValorSedex.ToString("N2")</span> — @resultadoFrete.PrazoSedex
+                                        <span class="text-success fw-bold">R$ @resultadoFrete?.FirstOrDefault()?.ValorSedex.ToString("N2")</span> — @resultadoFrete?.FirstOrDefault()?.PrazoSedex
                                     </label>
                                 </div>
                             </div>
@@ -167,7 +163,7 @@
     private string cep = "";
     private bool loading = false;
 
-    private RespostaFreteDto? resultadoFrete;
+    private List<FreteDto>? resultadoFrete;
 
     private string tipoFreteSelecionado = "";
     private decimal valorFreteSelecionado = 0;
@@ -232,7 +228,13 @@
 
     private async Task ConsultarFreteProdutoAsync()
     {
-        if (string.IsNullOrWhiteSpace(cep)) return;
+        System.Diagnostics.Debug.WriteLine("=== CLIQUEI NO BOTAO CALCULAR ===");
+        Console.WriteLine("=== CLIQUEI NO BOTAO CALCULAR ===");
+
+        if (string.IsNullOrWhiteSpace(cep)) {
+            Console.WriteLine("=== CEP ESTA VAZIO OU NULO ===");
+            return;
+        }
 
         loading = true;
         resultadoFrete = null;
@@ -240,12 +242,19 @@
 
         try
         {
-            // 💡 Olha que lindo e limpo! A UI só pede o dado, sem saber de rotas HTTP
+            Debug.WriteLine($"[1] Botão Calcular clicado. CEP digitado: {cep}"); // 👈 AQUI 1
             resultadoFrete = await CarrinhosServices.CalcularFreteAsync(cep);
+            Debug.WriteLine("[4] Frete retornado com sucesso para a tela!"); // 👈 AQUI 4
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ERRO NA TELA] Detalhe: {ex.Message}"); // 👈 AQUI ERRO NA TELA
         }
         finally
         {
             loading = false;
+
+            StateHasChanged();
         }
     }
 }

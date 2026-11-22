@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 
 namespace Validacao.Application.Interfaces
 {

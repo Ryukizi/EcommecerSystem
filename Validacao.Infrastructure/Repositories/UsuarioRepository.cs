@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Supabase;
-using Validacao.Application.Interfaces;
+﻿using Supabase;
+using Validacao.Application.Interfaces.Repositories;
 
 
-namespace Validacao.Infrastructure.Services
+namespace Validacao.Infrastructure.Repositories
 {
     public class UsuarioRepository : IUsuarioRepository
     {
@@ -31,6 +26,23 @@ namespace Validacao.Infrastructure.Services
             // Código de busca que estava no teu Service, isolado aqui!
             var response = await _supabaseClient.From<Usuario>().Where(u => u.Email == email).Get();
             return response.Models.FirstOrDefault();
+        }
+
+        public async Task<Usuario?> ObterPorRefreshTokenAsync(string refreshToken)
+        {
+            var response = await _supabaseClient
+                .From<Usuario>()
+                .Where(u => u.RefreshToken == refreshToken)
+                .Get();
+
+            return response.Models.FirstOrDefault();
+        }
+
+        public async Task AtualizarAsync(Usuario usuario)
+        {
+            await _supabaseClient
+                .From<Usuario>()
+                .Update(usuario);
         }
     }
 }

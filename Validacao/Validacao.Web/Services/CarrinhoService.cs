@@ -3,28 +3,29 @@
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Validacao.Application.Interfaces;
+using Validacao.Infrastructure.Services;
 using Validacao.Shared.Dtos;
-using Validacao.Shared.Models;
-
 
 public class CarrinhoService
 {
-    // 1. Declare o campo privado para o HttpClient
     private readonly HttpClient _httpClient;
     private readonly IJSRuntime _js;
+    private readonly IFreteService _freteService;
 
     private List<Guitarras> _itens = new List<Guitarras>();
+    private const string CarrinhoStorageKey = "carrinho_v2";
 
-    private const string CarrinhoStorageKey = "carrinho_v2"; // Mudamos a chave para limpar o histórico antigo sem Nome/Marca
-
-    public CarrinhoService(IJSRuntime js, HttpClient httpClient)
+    public CarrinhoService(IJSRuntime js, HttpClient httpClient, IFreteService freteService)
     {
         _js = js;
         _httpClient = httpClient;
+        _freteService = freteService;
     }
 
     public IReadOnlyList<Guitarras> Itens => _itens.AsReadOnly();
@@ -37,7 +38,6 @@ public class CarrinhoService
         WriteIndented = false
     };
 
-    // 💡 CORREÇÃO 1: Adicionamos Nome e Marca no DTO para salvar no navegador
     private sealed record GuitarraDto(long Id, string Nome, string Marca, decimal Preco, string? url_imagem);
 
     public async Task CarregarCarrinhoAsync()
@@ -56,8 +56,8 @@ public class CarrinhoService
                         {
                             Id = d.Id,
                             Preco = d.Preco,
-                            Nome = d.Nome,   // 💡 CORREÇÃO 2: Devolve o Nome para a tela
-                            Marca = d.Marca, // 💡 CORREÇÃO 3: Devolve a Marca para a tela
+                            Nome = d.Nome,   
+                            Marca = d.Marca, 
                             Url_imagem = d.url_imagem
                         }).ToList();
                     }
@@ -76,7 +76,7 @@ public class CarrinhoService
         }
         catch
         {
-            // Prerendering ignora
+
         }
     }
 
@@ -84,7 +84,6 @@ public class CarrinhoService
     {
         try
         {
-            // 💡 CORREÇÃO 4: Passamos os dados reais de Nome e Marca do produto na hora de salvar
             var dto = _itens.Select(g => new GuitarraDto(g.Id, g.Nome, g.Marca, g.Preco, g.Url_imagem)).ToList();
             var json = JsonSerializer.Serialize(dto, _jsonOptions);
             await _js.InvokeVoidAsync("localStorage.setItem", CarrinhoStorageKey, json);
@@ -124,21 +123,27 @@ public class CarrinhoService
         catch { }
     }
 
-    public async Task<RespostaFreteDto?> CalcularFreteAsync(string cep)
+    public async Task<List<FreteDto>> CalcularFreteAsync(string cep)
     {
         try
         {
-            string cepLimpo = cep.Replace("-", "").Trim();
+            Debug.WriteLine($"[2] CarrinhoService acionado com o CEP: {cep}");
+            string cepLimpo = cep.Replace("-", "").Trim() ?? string.Empty;
+
+            Debug.WriteLine($"[CarrinhoService] CEP limpo para consulta: '{cepLimpo}' (Tamanho: {cepLimpo.Length})");
+
             if (cepLimpo.Length != 8) return null;
 
-            string rotaApi = $"cep/{cepLimpo}";
+            Debug.WriteLine("Codigo Rodando via API HTTP");
 
-            // O seu CarrinhoService provavelmente já recebe o HttpClient no construtor
-            return await _httpClient.GetFromJsonAsync<RespostaFreteDto>(rotaApi);
+            var resultado = await _httpClient.GetFromJsonAsync<List<FreteDto>>($"api/cep/{cepLimpo}");
+
+            Console.WriteLine(resultado != null ? "[3] Frete calculado com sucesso pela API." : "[AVISO] Frete retornou nulo.");
+            return resultado;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao buscar frete no CarrinhoService: {ex.Message}");
+            Debug.WriteLine($"Erro ao buscar frete no CarrinhoService: {ex.Message}");
             return null;
         }
     }
