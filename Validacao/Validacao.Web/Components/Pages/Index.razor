@@ -109,14 +109,12 @@
 @code {
     private string _respostaBasica = "";
 
-    // 💡 Esta é a lista que a tela lê
     private List<ProdutosCadastradosDto>? produtos = null;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // 💡 REMOVEMOS o "var"! Agora estamos salvando direto na variável da classe.
             produtos = await httpClient.GetFromJsonAsync<List<ProdutosCadastradosDto>>("api/Produtos");
         }
         catch (Exception ex)
@@ -126,7 +124,7 @@
         }
         finally
         {
-            // 💡 Avisa o Blazor que os dados chegaram e a tela precisa ser desenhada de novo
+
             StateHasChanged();
         }
     }

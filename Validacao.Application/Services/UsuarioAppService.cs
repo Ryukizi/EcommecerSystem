@@ -12,6 +12,7 @@ namespace Validacao.Aplication.Service
         private readonly IEmailService _emailServico;
         private readonly IConfiguration _config;
         private readonly Supabase.Client _supabaseClient;
+        private readonly ITokenService _tokenService;
 
         // 💡 Removemos o IValidadorService do construtor do Backend!
         public UsuarioAppService(
@@ -19,13 +20,15 @@ namespace Validacao.Aplication.Service
             IUsuarioRepository usuarioRepository,
             IEmailService emailServico,
             IConfiguration config,
-            Supabase.Client supabaseClient)
+            Supabase.Client supabaseClient,
+            ITokenService tokenService) 
         {
             _criptografiaServico = criptografiaServico;
             _usuarioRepository = usuarioRepository;
             _emailServico = emailServico;
             _config = config;
             _supabaseClient = supabaseClient;
+            _tokenService = tokenService;
         }
 
         public async Task<Usuario> CadastrarAsync(UsuarioCadastroDto request)
@@ -70,19 +73,63 @@ namespace Validacao.Aplication.Service
                 throw new UnauthorizedAccessException("Senha incorreta.");
             }
 
+            var accessToken = _tokenService.GerarToken(usuario);
+            var refreshToken = _tokenService.GerarRefreshToken();
+
+            usuario.RefreshToken = refreshToken;
+            usuario.RefreshTokenExpiracao = DateTime.UtcNow.AddDays(7);
+            await _usuarioRepository.AtualizarAsync(usuario);
+
             return new
             {
                 Message = "Login bem-sucedido!",
+                Token = accessToken,
+                RefreshToken = refreshToken,
                 Usuario = new
                 {
                     Id = usuario.Id.ToString(),
                     Nome = usuario.Nome,
-                    Email = usuario.Email
+                    Email = usuario.Email,
+                    Perfil = usuario.Perfil
                 }
             };
         }
 
-        // 💡 Ajustado: Agora consulta o banco diretamente pelo repositório!
+        public async Task<object> RefreshTokenAsync(string refreshToken)
+        {
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                throw new UnauthorizedAccessException("Refresh token inválido.");
+            }
+
+            var usuario = await _usuarioRepository.ObterPorRefreshTokenAsync(refreshToken);
+
+            if (usuario == null ||
+                string.IsNullOrWhiteSpace(usuario.RefreshToken) ||
+                usuario.RefreshToken != refreshToken)
+            {
+                throw new UnauthorizedAccessException("Refresh token não encontrado ou inválido.");
+            }
+
+            if (usuario.RefreshTokenExpiracao.HasValue && usuario.RefreshTokenExpiracao.Value <= DateTime.UtcNow)
+            {
+                throw new UnauthorizedAccessException("Refresh token expirado.");
+            }
+
+            var novoAccessToken = _tokenService.GerarToken(usuario);
+            var novoRefreshToken = _tokenService.GerarRefreshToken();
+
+            usuario.RefreshToken = novoRefreshToken;
+            usuario.RefreshTokenExpiracao = DateTime.UtcNow.AddDays(7);
+            await _usuarioRepository.AtualizarAsync(usuario);
+
+            return new
+            {
+                Token = novoAccessToken,
+                RefreshToken = novoRefreshToken
+            };
+        }
+
         public async Task<string?> ValidarEmailAsync(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -129,5 +176,6 @@ namespace Validacao.Aplication.Service
                 Email = usuario.Email
             };
         }
+
     }
 }

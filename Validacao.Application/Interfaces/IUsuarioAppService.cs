@@ -9,5 +9,7 @@ namespace Validacao.Application.Interfaces
         Task<UsuarioLoginDto> ObterPerfilAsync(UsuarioLoginDto request);
         Task<string?> ValidarEmailAsync(string email);
         Task<int> EnviarCodigoAsync(string email);
+
+        Task<object> RefreshTokenAsync(string refreshToken);
     }
 }

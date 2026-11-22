@@ -88,9 +88,32 @@ namespace Validacao.Api.Controllers
             }
         }
 
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.RefreshToken))
+                {
+                    return BadRequest(new { mensagem = "Refresh token não informado." });
+                }
 
+                //Chame aqui o método do seu _usuarioAppService que valida o refreshToken
+                // e gera um novo access token (e opcionalmente um novo refresh token)
 
-        // 💡 Rota alterada para "verificar-email" e retorno adaptado para o que o Blazor espera!
+                var resultado = await _usuarioAppService.RefreshTokenAsync(request.RefreshToken);
+                return Ok(resultado);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { mensagem = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { mensagem = $"Erro ao tentar renovar token: {ex.Message}" });
+            }
+        }
+
         [HttpGet("verificar-email")]
         public async Task<IActionResult> ValidarEmail([FromQuery] string email)
         {

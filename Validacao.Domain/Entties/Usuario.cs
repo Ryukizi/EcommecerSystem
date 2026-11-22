@@ -21,4 +21,10 @@ public class Usuario : BaseModel
 
     [Column("perfil")]
     public string Perfil { get; set; } = "Usuario";
+
+    [Column("refresh_token")]
+    public string? RefreshToken { get; set; }
+
+    [Column("refresh_token_expiracao")]
+    public DateTime? RefreshTokenExpiracao { get; set; }
 }

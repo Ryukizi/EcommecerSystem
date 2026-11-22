@@ -27,5 +27,22 @@ namespace Validacao.Infrastructure.Repositories
             var response = await _supabaseClient.From<Usuario>().Where(u => u.Email == email).Get();
             return response.Models.FirstOrDefault();
         }
+
+        public async Task<Usuario?> ObterPorRefreshTokenAsync(string refreshToken)
+        {
+            var response = await _supabaseClient
+                .From<Usuario>()
+                .Where(u => u.RefreshToken == refreshToken)
+                .Get();
+
+            return response.Models.FirstOrDefault();
+        }
+
+        public async Task AtualizarAsync(Usuario usuario)
+        {
+            await _supabaseClient
+                .From<Usuario>()
+                .Update(usuario);
+        }
     }
 }

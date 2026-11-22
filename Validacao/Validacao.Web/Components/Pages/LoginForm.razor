@@ -4,6 +4,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 @inject HttpClient HttpClient
+@inject IJSRuntime JS
 
 <div class="login-container">
     <PageTitle>Login</PageTitle>
@@ -46,6 +47,7 @@
             </NotAuthorized>
         </AuthorizeView>
     </div>
+
 </div>
 
 @code {
@@ -92,20 +94,25 @@
             };
 
             // 📡 Envia a requisição POST para o endpoint da sua API
-            var response = await HttpClient.PostAsJsonAsync("https://localhost:7021/api/Usuario/login", loginDto);
+            var response = await HttpClient.PostAsJsonAsync("api/usuario/login", loginDto);
 
             if (response.IsSuccessStatusCode)
             {
-                // 🔓 Lê a resposta de sucesso contendo os dados do usuário validados pela API
                 var resultado = await response.Content.ReadFromJsonAsync<RespostaLogin>();
 
                 if (resultado != null && resultado.Usuario != null)
                 {
+                    await JS.InvokeVoidAsync("localStorage.setItem", "authToken", resultado.Token);
+                    await JS.InvokeVoidAsync("localStorage.setItem", "refreshToken", resultado.RefreshToken);
+
+                    Console.WriteLine("[SUCESSO] Tokens JWT salvos no LocalStorage com sucesso!");
+                    Console.WriteLine($"[TOKEN]: {resultado.Token}");
+
                     _loginSucesso = true;
                     _mensagemResultado = $"Bem-vindo, {resultado.Usuario.Nome}!";
                     StateHasChanged();
 
-                    // 💾 Inicia a sessão local usando os dados recebidos da API
+                    // 💾 2. Inicia a sessão local usando os dados recebidos
                     await RealizarLoginSessao(resultado.Usuario);
 
                     await Task.Delay(2000);
@@ -126,7 +133,7 @@
 
                 if (string.IsNullOrWhiteSpace(erroApi))
                 {
-                    _mensagemResultado = $"Erro no servidor local. Código HTTP: {response.StatusCode }";
+                    _mensagemResultado = $"Erro no servidor local. Código HTTP: {response.StatusCode}";
                 }
             }
         }

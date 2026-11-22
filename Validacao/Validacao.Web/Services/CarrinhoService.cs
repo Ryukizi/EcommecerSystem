@@ -14,7 +14,6 @@ using Validacao.Shared.Dtos;
 
 public class CarrinhoService
 {
-    // 1. Declare o campo privado para o HttpClient
     private readonly HttpClient _httpClient;
     private readonly IJSRuntime _js;
     private readonly IFreteService _freteService;
@@ -39,7 +38,6 @@ public class CarrinhoService
         WriteIndented = false
     };
 
-    // 💡 CORREÇÃO 1: Adicionamos Nome e Marca no DTO para salvar no navegador
     private sealed record GuitarraDto(long Id, string Nome, string Marca, decimal Preco, string? url_imagem);
 
     public async Task CarregarCarrinhoAsync()
@@ -58,8 +56,8 @@ public class CarrinhoService
                         {
                             Id = d.Id,
                             Preco = d.Preco,
-                            Nome = d.Nome,   // 💡 CORREÇÃO 2: Devolve o Nome para a tela
-                            Marca = d.Marca, // 💡 CORREÇÃO 3: Devolve a Marca para a tela
+                            Nome = d.Nome,   
+                            Marca = d.Marca, 
                             Url_imagem = d.url_imagem
                         }).ToList();
                     }
@@ -78,7 +76,7 @@ public class CarrinhoService
         }
         catch
         {
-            // Prerendering ignora
+
         }
     }
 
@@ -86,7 +84,6 @@ public class CarrinhoService
     {
         try
         {
-            // 💡 CORREÇÃO 4: Passamos os dados reais de Nome e Marca do produto na hora de salvar
             var dto = _itens.Select(g => new GuitarraDto(g.Id, g.Nome, g.Marca, g.Preco, g.Url_imagem)).ToList();
             var json = JsonSerializer.Serialize(dto, _jsonOptions);
             await _js.InvokeVoidAsync("localStorage.setItem", CarrinhoStorageKey, json);
@@ -139,7 +136,6 @@ public class CarrinhoService
 
             Debug.WriteLine("Codigo Rodando via API HTTP");
 
-            // CORRIGIDO: Faz a chamada HTTP para a API backend em vez de executar localmente no Blazor
             var resultado = await _httpClient.GetFromJsonAsync<List<FreteDto>>($"api/cep/{cepLimpo}");
 
             Console.WriteLine(resultado != null ? "[3] Frete calculado com sucesso pela API." : "[AVISO] Frete retornou nulo.");
